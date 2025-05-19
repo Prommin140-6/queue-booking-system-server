@@ -120,4 +120,12 @@ router.get('/booked-times', async (req, res) => {
   }
 });
 
+app.use((req, res, next) => {
+  console.log(`Request: ${req.method} ${req.url} from ${req.get('Origin') || 'No Origin'}`);
+  res.on('finish', () => {
+    console.log(`Response: ${res.statusCode} for ${req.method} ${req.url}`);
+  });
+  next();
+});
+
 module.exports = router;

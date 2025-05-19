@@ -15,12 +15,13 @@ connectDB();
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
-      'http://localhost:3000', // สำหรับ development
-      'https://queue-booking-system-client.vercel.app' // สำหรับ production
+      'http://localhost:3000',
+      'https://queue-booking-system-client.vercel.app'
     ];
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin || allowedOrigins.some(allowed => origin.startsWith(allowed))) {
       callback(null, true);
     } else {
+      console.log(`CORS denied for origin: ${origin}`); // Debug log
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -35,6 +36,15 @@ app.use(cors(corsOptions));
 // จัดการ OPTIONS request
 app.options('*', cors(corsOptions));
 
+// Log request and response
+app.use((req, res, next) => {
+  console.log(`Request: ${req.method} ${req.url} from ${req.get('Origin') || 'No Origin'}`);
+  res.on('finish', () => {
+    console.log(`Response: ${res.statusCode} for ${req.method} ${req.url}`);
+  });
+  next();
+});
+
 app.use(express.json());
 
 // Routes
@@ -44,7 +54,7 @@ app.use('/api/admin', adminRoutes);
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
 const PORT = process.env.PORT || 5000;
