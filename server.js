@@ -2,14 +2,17 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./db');
-const bookingRoutes = require('./routes/booking');
+const bookingRoutes = require('./routes/booking'); // ถูกต้องตามที่คุณยืนยัน
 const adminRoutes = require('./routes/admin');
 
 dotenv.config();
 const app = express();
 
 // Connect to MongoDB
-connectDB();
+connectDB().catch(err => {
+  console.error('Failed to start server due to DB connection error:', err);
+  process.exit(1);
+});
 
 // Dynamic CORS middleware
 const corsOptions = {
@@ -18,10 +21,11 @@ const corsOptions = {
       'http://localhost:3000',
       'https://queue-booking-system-client.vercel.app'
     ];
-    if (!origin || allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+    console.log(`Origin received: ${origin}`);
+    if (!origin || allowedOrigins.some(allowed => origin === allowed || origin.startsWith(allowed))) {
       callback(null, true);
     } else {
-      console.log(`CORS denied for origin: ${origin}`); // Debug log
+      console.log(`CORS denied for origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
