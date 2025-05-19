@@ -1,21 +1,19 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
-  // เพิ่ม CORS headers ในกรณี error
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
-
   const token = req.header('Authorization')?.replace('Bearer ', '');
   if (!token) {
+    console.log('No token found in request');
     return res.status(401).json({ message: 'No token, authorization denied' });
   }
 
   try {
+    console.log('Verifying token with secret:', process.env.JWT_SECRET ? 'defined' : 'undefined');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
+    console.error('Token verification error:', error.message);
     res.status(401).json({ message: 'Token is not valid' });
   }
 };

@@ -59,8 +59,10 @@ router.get('/summary', authMiddleware, async (req, res) => {
 // Update booking status
 router.patch('/:id', authMiddleware, async (req, res) => {
   try {
+    console.log('PATCH /api/bookings/:id received body:', req.body);
     const { status } = req.body;
     if (!['pending', 'accepted', 'rejected'].includes(status)) {
+      console.log('Invalid status:', status);
       return res.status(400).json({ message: 'Invalid status value' });
     }
 
@@ -70,11 +72,13 @@ router.patch('/:id', authMiddleware, async (req, res) => {
       { new: true }
     );
     if (!booking) {
+      console.log('Booking not found for ID:', req.params.id);
       return res.status(404).json({ message: 'Booking not found' });
     }
     res.json(booking);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    console.error('PATCH /api/bookings/:id error:', error.message);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
