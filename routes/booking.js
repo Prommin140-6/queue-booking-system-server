@@ -7,13 +7,13 @@ const authMiddleware = require('../middleware/auth');
 router.post('/', async (req, res) => {
   const { name, phone, carModel, licensePlate, date, time } = req.body;
   try {
-    // ตรวจสอบว่ามีคิวในวันที่และเวลาเดียวกันหรือไม่
-    const existingBooking = await Booking.findOne({ date: new Date(date), time });
+    // ตรวจสอบว่ามีคิวในวันที่และเวลาเดียวกันหรือไม่ (เฉพาะ status: pending)
+    const existingBooking = await Booking.findOne({ date: new Date(date), time, status: 'pending' });
     if (existingBooking) {
       return res.status(400).json({ message: 'เวลา\nเต็ม' });
     }
 
-    const booking = new Booking({ name, phone, carModel, licensePlate, date, time });
+    const booking = new Booking({ name, phone, carModel, licensePlate, date, time, status: 'pending' });
     await booking.save();
     res.status(201).json(booking);
   } catch (error) {
@@ -60,6 +60,9 @@ router.patch('/:id', authMiddleware, async (req, res) => {
       { status: req.body.status },
       { new: true }
     );
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
     res.json(booking);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
@@ -76,7 +79,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// เพิ่ม route นี้สำหรับดึงเวลาที่ถูกจองในวันนั้นๆ
+// Get booked times for a specific date
 router.get('/booked-times', async (req, res) => {
   try {
     const dateParam = req.query.date;
@@ -92,9 +95,10 @@ router.get('/booked-times', async (req, res) => {
     const nextDate = new Date(date);
     nextDate.setDate(nextDate.getDate() + 1);
 
-    // ค้นหาการจองที่อยู่ในวันนั้นทั้งหมด
+    // ค้นหาการจองที่อยู่ในวันนั้นและมี status: pending
     const bookings = await Booking.find({
       date: { $gte: date, $lt: nextDate },
+      status: 'pending', // กรองเฉพาะ pending
     });
 
     // สร้าง array รายการเวลาที่ถูกจองไปแล้ว
