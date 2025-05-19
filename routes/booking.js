@@ -7,8 +7,12 @@ const authMiddleware = require('../middleware/auth');
 router.post('/', async (req, res) => {
   const { name, phone, carModel, licensePlate, date, time } = req.body;
   try {
-    // ตรวจสอบว่ามีคิวในวันที่และเวลาเดียวกันหรือไม่ (เฉพาะ status: pending)
-    const existingBooking = await Booking.findOne({ date: new Date(date), time, status: 'pending' });
+    // ตรวจสอบว่ามีคิวในวันที่และเวลาเดียวกันที่เป็น pending หรือ accepted หรือไม่
+    const existingBooking = await Booking.findOne({
+      date: new Date(date),
+      time,
+      status: { $in: ['pending', 'accepted'] } // ตรวจสอบทั้ง pending และ accepted
+    });
     if (existingBooking) {
       return res.status(400).json({ message: 'เวลา\nเต็ม' });
     }
@@ -55,9 +59,14 @@ router.get('/summary', authMiddleware, async (req, res) => {
 // Update booking status
 router.patch('/:id', authMiddleware, async (req, res) => {
   try {
+    const { status } = req.body;
+    if (!['pending', 'accepted', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
     const booking = await Booking.findByIdAndUpdate(
       req.params.id,
-      { status: req.body.status },
+      { status },
       { new: true }
     );
     if (!booking) {
@@ -95,10 +104,10 @@ router.get('/booked-times', async (req, res) => {
     const nextDate = new Date(date);
     nextDate.setDate(nextDate.getDate() + 1);
 
-    // ค้นหาการจองที่อยู่ในวันนั้นและมี status: pending
+    // ค้นหาการจองที่อยู่ในวันนั้นและมี status: pending หรือ accepted
     const bookings = await Booking.find({
       date: { $gte: date, $lt: nextDate },
-      status: 'pending', // กรองเฉพาะ pending
+      status: { $in: ['pending', 'accepted'] }, // กรองเฉพาะ pending และ accepted
     });
 
     // สร้าง array รายการเวลาที่ถูกจองไปแล้ว
