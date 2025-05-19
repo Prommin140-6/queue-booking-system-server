@@ -11,16 +11,29 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
-// Middleware
-app.use(cors({
-  origin: ['http://localhost:3000', 'https://queue-booking.vercel.app'],
+// Dynamic CORS middleware
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:3000', // สำหรับ development
+      'https://queue-booking-system-client.vercel.app' // สำหรับ production
+    ];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+  credentials: true,
+  optionsSuccessStatus: 200
+};
 
-// จัดการ OPTIONS request (CORS preflight)
-app.options('*', cors()); // อนุญาตทุก route สำหรับ OPTIONS
+app.use(cors(corsOptions));
+
+// จัดการ OPTIONS request
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
