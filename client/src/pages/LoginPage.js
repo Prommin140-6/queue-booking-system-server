@@ -7,7 +7,7 @@ function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
+  
   const onSubmit = async (data) => {
     try {
       const response = await axios.post('http://localhost:5000/api/admin/login', data);

@@ -1,8 +1,12 @@
 const jwt = require('jsonwebtoken');
 
-const auth = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
+module.exports = (req, res, next) => {
+  // เพิ่ม CORS headers ในกรณี error
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE');
 
+  const token = req.header('Authorization')?.replace('Bearer ', '');
   if (!token) {
     return res.status(401).json({ message: 'No token, authorization denied' });
   }
@@ -15,5 +19,3 @@ const auth = (req, res, next) => {
     res.status(401).json({ message: 'Token is not valid' });
   }
 };
-
-module.exports = auth;

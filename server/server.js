@@ -12,7 +12,16 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://queue-booking.vercel.app'],
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// จัดการ OPTIONS request (CORS preflight)
+app.options('*', cors()); // อนุญาตทุก route สำหรับ OPTIONS
+
 app.use(express.json());
 
 // Routes

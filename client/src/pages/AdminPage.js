@@ -4,7 +4,7 @@ import { Button, Card, Col, Input, Row, Statistic, Table, Tag, Tooltip, Space, M
 import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, ExclamationCircleOutlined, SearchOutlined, CalendarOutlined, HomeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
-import './AdminPage.css';  // <-- นำเข้า CSS ที่แยกออกมา
+import './AdminPage.css';
 
 const { confirm } = Modal;
 
@@ -59,12 +59,13 @@ const AdminPage = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const bookingsRes = await axios.get('http://localhost:5000/api/bookings', {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const bookingsRes = await axios.get(`${API_URL}/api/bookings`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
-        const summaryRes = await axios.get('http://localhost:5000/api/bookings/summary', {
+        const summaryRes = await axios.get(`${API_URL}/api/bookings/summary`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -92,9 +93,10 @@ const AdminPage = () => {
   const handleStatusUpdate = async (id, status) => {
     setLoading(true);
     try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       const token = localStorage.getItem('token');
       await axios.patch(
-        `http://localhost:5000/api/bookings/${id}`,
+        `${API_URL}/api/bookings/${id}`,
         { status },
         {
           headers: {
@@ -125,8 +127,9 @@ const AdminPage = () => {
       onOk: async () => {
         setLoading(true);
         try {
+          const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
           const token = localStorage.getItem('token');
-          await axios.delete(`http://localhost:5000/api/bookings/${id}`, {
+          await axios.delete(`${API_URL}/api/bookings/${id}`, {
             headers: {
               Authorization: `Bearer ${token}`
             }
@@ -273,7 +276,6 @@ const AdminPage = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto bg-white rounded-lg shadow-md">
-      {/* Header */}
       <Row justify="space-between" align="middle" className="mb-6">
         <Col>
           <h1 className="text-3xl font-extrabold text-gray-800 flex items-center gap-2">
@@ -293,7 +295,6 @@ const AdminPage = () => {
         </Col>
       </Row>
 
-      {/* Summary Cards */}
       <Row gutter={16} className="mb-6">
         <Col xs={24} sm={8}>
           <Card hoverable bordered={false} className="rounded-lg shadow-lg">
@@ -326,7 +327,6 @@ const AdminPage = () => {
         </Col>
       </Row>
 
-      {/* Search & Filter */}
       <Row gutter={12} className="mb-6" align="middle">
         <Col xs={24} sm={16}>
           <Input
@@ -346,13 +346,11 @@ const AdminPage = () => {
             placeholderText="กรองวันที่จอง"
             className="react-datepicker__input-container"
             wrapperClassName="react-datepicker-wrapper"
-            // เพิ่ม prop ป้องกันกรณี clear filter ได้
             isClearable
           />
         </Col>
       </Row>
 
-      {/* Tables */}
       <div>
         <h2 className="text-xl font-semibold mb-3 text-gray-700">รายการรอดำเนินการ</h2>
         <Table
